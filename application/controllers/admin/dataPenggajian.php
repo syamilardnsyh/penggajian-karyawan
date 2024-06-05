@@ -93,6 +93,7 @@ class DataPenggajian extends CI_Controller
         $this->load->view('templates_admin/header', $data);
         $this->load->view('admin/cetakDataGaji', $data);
     }
+    
     public function export_excel()
     {
         $data['title'] = "Cetak Data Gaji Pegawai";
@@ -106,7 +107,7 @@ class DataPenggajian extends CI_Controller
             $tahun = date('Y');
             $bulantahun = $bulan . $tahun;
         }
-    
+        
         $data['cetakGaji'] = $this->db->query("SELECT data_pegawai.nip, 
         data_pegawai.nama_pegawai, data_pegawai.jenis_kelamin,
         data_jabatan.nama_jabatan, data_jabatan.gaji_pokok, 
@@ -116,8 +117,11 @@ class DataPenggajian extends CI_Controller
         INNER JOIN data_jabatan ON data_jabatan.id_jabatan=data_kehadiran.id_jabatan
         WHERE data_kehadiran.bulan='$bulantahun'
         ORDER BY data_pegawai.nama_pegawai ASC")->result();
+        
+        // potongan per alpha adalah 50000
+        $nilaiPotonganAlpha = 50000;
     
-        // pake library PHPSpreadsheet
+        // Pake library PHPSpreadsheet
         // require_once(APPPATH . 'vendor/autoload.php');
     
         $spreadsheet = new Spreadsheet();
@@ -144,6 +148,9 @@ class DataPenggajian extends CI_Controller
         $row = 2;
         $no = 1;
         foreach ($data['cetakGaji'] as $gaji) {
+            $potongan = $gaji->alpha * $nilaiPotonganAlpha;
+            $totalGaji = $gaji->gaji_pokok + $gaji->transport + $gaji->uang_makan - $potongan;
+
             $sheet->setCellValue('A' . $row, $no++)
                   ->setCellValue('B' . $row, $gaji->nip)
                   ->setCellValue('C' . $row, $gaji->nama_pegawai)
@@ -152,12 +159,12 @@ class DataPenggajian extends CI_Controller
                   ->setCellValue('F' . $row, $gaji->gaji_pokok)
                   ->setCellValue('G' . $row, $gaji->transport)
                   ->setCellValue('H' . $row, $gaji->uang_makan)
-                  ->setCellValue('I' . $row, $gaji->alpha) // alpha adalah potongan
-                  ->setCellValue('J' . $row, ($gaji->gaji_pokok + $gaji->transport + $gaji->uang_makan - $gaji->alpha)); // Total Gaji
+                  ->setCellValue('I' . $row, $potongan) // Masukkan nilai potongan
+                  ->setCellValue('J' . $row, $totalGaji); // Total Gaji
             $row++;
         }
     
-        // nama judul worksheet
+        // Nama judul worksheet
         $sheet->setTitle("Cetak Gaji Pegawai");
     
         // Setel header output
@@ -171,5 +178,4 @@ class DataPenggajian extends CI_Controller
     
         exit;
     }
-        
 }

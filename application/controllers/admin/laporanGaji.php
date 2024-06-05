@@ -20,7 +20,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet;
 
 class LaporanGaji extends CI_Controller
 {
-
     public function __construct()
     {
         parent::__construct();
@@ -32,7 +31,6 @@ class LaporanGaji extends CI_Controller
             redirect('welcome');
         }
     }
-
 
     public function index()
     {
@@ -91,6 +89,7 @@ class LaporanGaji extends CI_Controller
         $this->load->view('templates_admin/header', $data);
         $this->load->view('admin/cetakDataGaji', $data);
     }
+
     public function export_excel()
     {
         if ((isset($_GET['bulan']) && $_GET['bulan'] != '') && (isset($_GET['tahun']) && $_GET['tahun'] != '')) {
@@ -102,7 +101,7 @@ class LaporanGaji extends CI_Controller
             $tahun = date('Y');
             $bulantahun = $bulan . $tahun;
         }
-    
+
         $gaji = $this->db->query("SELECT data_pegawai.nip, 
             data_pegawai.nama_pegawai, data_pegawai.jenis_kelamin,
             data_jabatan.nama_jabatan, data_jabatan.gaji_pokok, 
@@ -112,16 +111,19 @@ class LaporanGaji extends CI_Controller
             INNER JOIN data_jabatan ON data_jabatan.id_jabatan=data_kehadiran.id_jabatan
             WHERE data_kehadiran.bulan='$bulantahun'
             ORDER BY data_pegawai.nama_pegawai ASC")->result();
-    
+
+        // Misalkan nilai potongan per alpha adalah 50000
+        $nilaiPotonganAlpha = 50000;
+
         // Create new Spreadsheet object
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-    
-        // properti dokumen
+
+        // Set the document properties
         $spreadsheet->getProperties()->setCreator("Admin")
                                      ->setLastModifiedBy("Admin")
                                      ->setTitle("Laporan Gaji");
-    
+
         // Set the column headers
         $sheet->setCellValue('A1', 'NO')
               ->setCellValue('B1', 'NIP')
@@ -133,11 +135,14 @@ class LaporanGaji extends CI_Controller
               ->setCellValue('H1', 'Uang Makan')
               ->setCellValue('I1', 'Potongan')
               ->setCellValue('J1', 'Total Gaji');
-    
+
         // Add data to the spreadsheet
         $row = 2;
         $no = 1;
         foreach ($gaji as $data) {
+            $potongan = $data->alpha * $nilaiPotonganAlpha;
+            $totalGaji = $data->gaji_pokok + $data->transport + $data->uang_makan - $potongan;
+
             $sheet->setCellValue('A' . $row, $no++)
                   ->setCellValue('B' . $row, $data->nip)
                   ->setCellValue('C' . $row, $data->nama_pegawai)
@@ -146,22 +151,22 @@ class LaporanGaji extends CI_Controller
                   ->setCellValue('F' . $row, $data->gaji_pokok)
                   ->setCellValue('G' . $row, $data->transport)
                   ->setCellValue('H' . $row, $data->uang_makan)
-                  ->setCellValue('I' . $row, $data->alpha) // alpha adalah potongan
-                  ->setCellValue('J' . $row, ($data->gaji_pokok + $data->transport + $data->uang_makan - $data->alpha)); // Total Gaji
+                  ->setCellValue('I' . $row, $potongan) // Nilai potongan
+                  ->setCellValue('J' . $row, $totalGaji); // Total Gaji
             $row++;
         }
-    
+
         $sheet->setTitle("Laporan Gaji");
-    
+
         // Set the header for download
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment;filename="Laporan Gaji ' . $bulantahun . '.xlsx"');
         header('Cache-Control: max-age=0');
-    
+
         // Create Excel file
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
-    
+
         exit;
     }
-}    
+}

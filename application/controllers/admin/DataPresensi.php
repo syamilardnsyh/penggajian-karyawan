@@ -153,56 +153,63 @@ class DataPresensi extends CI_Controller
     }
 
     public function export_excel()
-    {
-        if ((isset($_GET['bulan']) && $_GET['bulan'] != '') && (isset($_GET['tahun']) && $_GET['tahun'] != '')) {
-            $bulan = $_GET['bulan'];
-            $tahun = $_GET['tahun'];
-            $bulantahun = $bulan . $tahun;
-        } else {
-            $bulan = date('m');
-            $tahun = date('Y');
-            $bulantahun = $bulan . $tahun;
-        }
-
-        $presensi = $this->db->query("SELECT data_kehadiran.*,data_pegawai.nama_pegawai, data_pegawai.jenis_kelamin, data_pegawai.id_jabatan 
-            FROM data_kehadiran 
-            INNER JOIN data_pegawai ON data_kehadiran.nip=data_pegawai.nip
-            INNER JOIN data_jabatan ON data_pegawai.id_jabatan = data_jabatan.id_jabatan
-            WHERE data_kehadiran.bulan='$bulantahun'
-            ORDER BY data_pegawai.nama_pegawai ASC")->result();
-
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Set header
-        $sheet->setCellValue('A1', 'No');
-        $sheet->setCellValue('B1', 'NIP');
-        $sheet->setCellValue('C1', 'Nama Pegawai');
-        $sheet->setCellValue('D1', 'Hadir');
-        $sheet->setCellValue('E1', 'Izin');
-        $sheet->setCellValue('F1', 'Sakit');
-        $sheet->setCellValue('G1', 'Alpha');
-
-        // Set data
-        $row = 2;
-        $no = 1;
-        foreach ($presensi as $p) {
-            $sheet->setCellValue('A' . $row, $no++);
-            $sheet->setCellValue('B' . $row, $p->nip);
-            $sheet->setCellValue('C' . $row, $p->nama_pegawai);
-            $sheet->setCellValue('D' . $row, $p->hadir);
-            $sheet->setCellValue('E' . $row, $p->izin);
-            $sheet->setCellValue('F' . $row, $p->sakit);
-            $sheet->setCellValue('G' . $row, $p->alpha);
-            $row++;
-        }
-
-        $writer = new Xlsx($spreadsheet);
-        $filename = 'Data Presensi' . $bulantahun . '.xlsx';
-
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="' . $filename . '"'); 
-        header('Cache-Control: max-age=0');
-        $writer->save('php://output');
+{
+    if ((isset($_GET['bulan']) && $_GET['bulan'] != '') && (isset($_GET['tahun']) && $_GET['tahun'] != '')) {
+        $bulan = $_GET['bulan'];
+        $tahun = $_GET['tahun'];
+        $bulantahun = $bulan . $tahun;
+    } else {
+        $bulan = date('m');
+        $tahun = date('Y');
+        $bulantahun = $bulan . $tahun;
     }
+
+    $presensi = $this->db->query("SELECT data_kehadiran.*, data_pegawai.nama_pegawai, data_pegawai.jenis_kelamin, data_pegawai.id_jabatan 
+        FROM data_kehadiran 
+        INNER JOIN data_pegawai ON data_kehadiran.nip=data_pegawai.nip
+        INNER JOIN data_jabatan ON data_pegawai.id_jabatan = data_jabatan.id_jabatan
+        WHERE data_kehadiran.bulan='$bulantahun'
+        ORDER BY data_pegawai.nama_pegawai ASC")->result();
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    // Set header
+    $sheet->setCellValue('A1', 'No');
+    $sheet->setCellValue('B1', 'NIP');
+    $sheet->setCellValue('C1', 'Nama Pegawai');
+    $sheet->setCellValue('D1', 'Hadir');
+    $sheet->setCellValue('E1', 'Izin');
+    $sheet->setCellValue('F1', 'Sakit');
+    $sheet->setCellValue('G1', 'Alpha');
+
+    // Set data
+    $row = 2;
+    $no = 1;
+    foreach ($presensi as $p) {
+        $sheet->setCellValue('A' . $row, $no++);
+        $sheet->setCellValue('B' . $row, $p->nip);
+        $sheet->setCellValue('C' . $row, $p->nama_pegawai);
+        $sheet->setCellValue('D' . $row, $p->hadir);
+        $sheet->setCellValue('E' . $row, $p->izin);
+        $sheet->setCellValue('F' . $row, $p->sakit);
+        $sheet->setCellValue('G' . $row, $p->alpha);
+        $row++;
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $filename = 'Data Presensi' . $bulantahun . '.xlsx';
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment;filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+    header('Expires: Fri, 11 Nov 2011 11:11:11 GMT');
+    header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+    header('Cache-Control: cache, must-revalidate');
+    header('Pragma: public');
+
+    ob_end_clean(); // Tambahkan ini untuk membersihkan buffer output sebelum menghasilkan file Excel
+    $writer->save('php://output');
+    exit; // 
+}
 }
