@@ -71,7 +71,7 @@ class LaporanPresensi extends CI_Controller
 
         $presensi = $this->db->query("SELECT data_kehadiran.*, data_pegawai.nama_pegawai FROM data_kehadiran
             JOIN data_pegawai ON data_kehadiran.nip = data_pegawai.nip
-            WHERE bulan='$bulantahun'
+            WHERE bulan='$bulantahun' AND data_pegawai.status_keaktifan='aktif'
             ORDER BY data_kehadiran.nip ASC")->result();
 
         // Create new Spreadsheet object

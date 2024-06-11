@@ -37,7 +37,7 @@ class DataPresensi extends CI_Controller
             FROM data_kehadiran 
             INNER JOIN data_pegawai ON data_kehadiran.nip=data_pegawai.nip
             INNER JOIN data_jabatan ON data_pegawai.id_jabatan = data_jabatan.id_jabatan
-            WHERE data_kehadiran.bulan='$bulantahun'
+            WHERE data_kehadiran.bulan='$bulantahun' 
             ORDER BY data_pegawai.nama_pegawai ASC")->result();
 
         $this->load->view('templates_admin/header', $data);
@@ -168,7 +168,7 @@ class DataPresensi extends CI_Controller
         FROM data_kehadiran 
         INNER JOIN data_pegawai ON data_kehadiran.nip=data_pegawai.nip
         INNER JOIN data_jabatan ON data_pegawai.id_jabatan = data_jabatan.id_jabatan
-        WHERE data_kehadiran.bulan='$bulantahun'
+        WHERE data_kehadiran.bulan='$bulantahun' AND data_pegawai.status_keaktifan='aktif'
         ORDER BY data_pegawai.nama_pegawai ASC")->result();
 
     $spreadsheet = new Spreadsheet();

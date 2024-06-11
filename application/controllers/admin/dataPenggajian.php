@@ -115,7 +115,7 @@ class DataPenggajian extends CI_Controller
         data_kehadiran.alpha FROM data_pegawai
         INNER JOIN data_kehadiran ON data_kehadiran.nip=data_pegawai.nip
         INNER JOIN data_jabatan ON data_jabatan.id_jabatan=data_kehadiran.id_jabatan
-        WHERE data_kehadiran.bulan='$bulantahun'
+        WHERE data_kehadiran.bulan='$bulantahun' AND data_pegawai.status_keaktifan='aktif'
         ORDER BY data_pegawai.nama_pegawai ASC")->result();
         
         // potongan per alpha adalah 50000
@@ -148,7 +148,7 @@ class DataPenggajian extends CI_Controller
         $row = 2;
         $no = 1;
         foreach ($data['cetakGaji'] as $gaji) {
-            $potongan = $gaji->alpha * $nilaiPotonganAlpha;
+            $potongan = $gaji->alpha * $nilaiPotonganAlpha + (($gaji->gaji_pokok + $gaji->transport + $gaji->uang_makan) * 0.03);
             $totalGaji = $gaji->gaji_pokok + $gaji->transport + $gaji->uang_makan - $potongan;
 
             $sheet->setCellValue('A' . $row, $no++)
