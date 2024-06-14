@@ -14,7 +14,7 @@
         <label>NIP</label>
         <?php foreach($id as $i):
                         $a= $i['nip'];
-                        $no= '179120983049281';
+                        $no= '2024060001';
                         $urutan= (int)substr($a, 15,2);
                         $urutan++;
                         $id= $no.sprintf("%01s", $urutan);
